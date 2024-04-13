@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import linregress
 from scipy.spatial import cKDTree
 
 def DensityFluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size):
@@ -119,3 +120,18 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdat
         return variance, rdata
     else:
         return variance
+
+
+def fit_dfs(radii,dfs,lbounds=None):
+    if lbounds is not None:
+        lmin = lbounds[0]
+        lmax = lbounds[1]
+        inds = ((radii >= lmin)*(radii <= lmax)).nonzero()[0]
+        radii = radii[inds]
+        dfs = dfs[inds]
+
+    lr_obj = linregress(np.log(radii),np.log(dfs))
+    a = lr_obj.slope
+    b = lr_obj.intercept
+    r2 = lr_obj.rvalue**2
+    return a, b, r2
