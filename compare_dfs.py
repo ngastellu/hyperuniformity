@@ -10,11 +10,11 @@ from density_fluctuations import fit_dfs
 datadir = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/'
 
 r_pCNN, dfs_pCNN = np.load(datadir + 'dfs_radii_bigMAC_unsymm_RS.npy').T
-r_tdot6, dfs_tdot6 = np.load(datadir + 'ata_structures/avg_dfs_tempdot6.npy')
+r_tdot6, dfs_tdot6 = np.load(datadir + 'ata_structures/avg_dfs_tempdot6_100samples.npy')
 
 
 
-a_pCNN, b_pCNN, r2 = fit_dfs(r_pCNN, dfs_pCNN,lbounds=[3,50])
+a_pCNN, b_pCNN, r2 = fit_dfs(r_pCNN, dfs_pCNN,lbounds=[5,50])
 print('PixelCNN fit found.\n\
         Slope = %f\n\
         Intercept = %f\n\
@@ -22,8 +22,8 @@ print('PixelCNN fit found.\n\
         '%(a_pCNN, b_pCNN, r2))
 
 
-a_tdot6, b_tdot6, r2 = fit_dfs(r_tdot6, dfs_tdot6,lbounds=[3,50])
-print('PixelCNN fit found.\n\
+a_tdot6, b_tdot6, r2 = fit_dfs(r_tdot6, dfs_tdot6,lbounds=[5,50])
+print('tdot6 fit found.\n\
         Slope = %f\n\
         Intercept = %f\n\
         rval = %f\n\
