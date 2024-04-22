@@ -7,11 +7,11 @@ from qcnico.plt_utils import setup_tex
 from density_fluctuations import fit_dfs
 
 
-datafile = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/avg_dfs_random_pbc.npy'
+datafile = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/ata_structures/avg_dfs_radii_tempdot6_unrelaxed.npy'
 
 
-dfs = np.load(datafile)[:700]
-r = np.linspace(1,700,700)
+dfs = np.load(datafile)[:,1]
+r = np.load(datafile)[:,0]
 
 
 
