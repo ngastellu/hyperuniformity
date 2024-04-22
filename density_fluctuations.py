@@ -72,7 +72,7 @@ def DensityFluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_siz
     else: return variance
 
 
-def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdata=False):
+def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdata=False,seed=None):
     """Computes the fluctuations in density of a point process resolved in continuous 2D space (as opposed
     to a discrete grid). The point process is sampled using circular windows. 
     
@@ -93,6 +93,8 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdat
         Number of sampling windows used to estimate the density fluctuations.
     save_rdata: `bool`
         If `True`, the function also returns the positions and radii of the sampling windows.
+    seed: `None` (default) or `int`
+        Seed for RNG that determines window positions
 
     Output
     ------
@@ -103,6 +105,10 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdat
         used to calculate `variance.`
     """
 
+
+    if seed is not None:
+        np.random.seed(seed)
+    
     area = np.pi*l*l
 
     lx, Lx = xbounds
