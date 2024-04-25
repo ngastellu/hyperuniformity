@@ -8,7 +8,7 @@ from density_fluctuations import fit_dfs
 
 
 datadir = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/'
-datafile_1 = datadir + 'avg_dfs_radii_graphene_seeded_rng.npy'
+datafile_1 = datadir + 'ata_structures/avg_dfs_radii_tempdot6_relaxed_263structures.npy'
 datafile_2 = datadir + 'avg_dfs_radii_pCNN_relaxed.npy'
 
 # r = np.linspace(1,700,700)
