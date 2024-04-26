@@ -12,9 +12,9 @@ rank = MPI.COMM_WORLD.Get_rank()
 nprocs = MPI.COMM_WORLD.Get_size()
 
 
-a = 6 #size of unit cell
-l = 5 #span of random coords in unot cell
-n = 20 #number of atoms per cell
+a = 20 #size of unit cell
+l = 18 #span of random coords in unot cell
+n = 40 #number of atoms per cell
 nsamples = 50
 
 
@@ -22,7 +22,7 @@ latt_vecs = np.eye(2) * a
 
 cell = np.random.rand(2,n) * l
 
-supercell = make_supercell(cell,latt_vecs,100,100)
+supercell = make_supercell(cell,latt_vecs,50,50)
 
 supercell = supercell.T
 
@@ -40,8 +40,8 @@ print(f'Coord bounds along y-direction: {[ly,Ly]}',flush=True)
 
 tree = cKDTree(supercell)
 
-nradii = 500
-rmax = 150
+nradii = 1000
+rmax = 350
 print(f'Max sample window size = {rmax}', flush=True)
 print(f'Number of radii = {nradii} --> dr = {(rmax-1)/nradii}',flush=True)
 
