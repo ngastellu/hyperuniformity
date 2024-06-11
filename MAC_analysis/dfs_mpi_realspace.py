@@ -67,7 +67,7 @@ else:
 dfs = np.zeros(radii.shape[0],dtype=float)
 rdata = np.zeros((radii.shape[0]*nsamples,3))
 for k,r in enumerate(radii):
-    dflucs, rdat = DensityFluctuationsRS(tree,r,[lx,Lx],[ly,Ly],nsamples)
+    dflucs, rdat = DensityFluctuationsRS(tree,r,[lx,Lx],[ly,Ly],nsamples,save_rdata=True)
     dfs[k] = dflucs
     rdata[nsamples*k:nsamples*(k+1)] = rdat
 
