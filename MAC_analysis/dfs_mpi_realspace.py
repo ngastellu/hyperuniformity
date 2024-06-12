@@ -74,3 +74,4 @@ for k,r in enumerate(radii):
 
 np.save('dfs-%d.npy'%(rank),dfs) #distinguish the output of each process by its number
 np.save('radii-%d.npy'%rank,radii)
+np.save(f'rdata-{rank}.npy', rdata)
