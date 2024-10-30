@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-from os import path
+import os
 from glob import glob
 import numpy as np
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 from density_fluctuations import DensityFluctuationsRS
 from mpi4py import MPI
 from qcnico.coords_io import read_xsf, read_xyz
@@ -14,38 +14,42 @@ from qcnico.remove_dangling_carbons import remove_dangling_carbons
 rank = MPI.COMM_WORLD.Get_rank()
 nprocs = MPI.COMM_WORLD.Get_size()
 
-rCC = 1.8
+rCC = 1.8 # max C-C 'bond length' (i.e. nearest-neigbour distance)
+eps = 1.0 # additional 'whitespace' between cell and its periodic image
 
 strucindex = int(sys.argv[1])
-structype = sys.argv[2]
-nsamples = int(sys.argv[3])
+structype = os.getcwd().split('/')[-2]
+nsamples = int(sys.argv[2])
 
 
 if structype == '40x40':
-    posfile = path.expanduser(f'~/scratch/clean_bigMAC/40x40/relax/no_PBC/relaxed_structures/bigMAC-{strucindex}_relaxed.xsf')
+    xyz_prefix = 'bigMAC-'
 else:
-    if '_old_model' == structype[-10:]:
-        posfile = path.expanduser(f'~/scratch/clean_bigMAC/{structype}/sample-{strucindex}/{structype[:-10]}n{strucindex}_relaxed.xsf')
-    else:
-        #posfile = path.expanduser(f'~/scratch/clean_bigMAC/{structype}/sample-{strucindex}/{structype}n{strucindex}_relaxed.xsf')
-        posfile = path.expanduser(f'~/scratch/clean_bigMAC/{structype}/relaxed_structures/{structype}n{strucindex}_relaxed.xsf')
-        #posfile = path.expanduser(f'~/scratch/ata_structures/{structype}/{structype}n{strucindex}.xyz')
+    xyz_prefix = structype + 'n'
 
-pos, _ = read_xsf(posfile)
-#pos  = read_xyz(posfile)
+pos = read_xyz(os.path.expanduser(f'~/scratch/clean_bigMAC/{structype}/relaxed_structures_no_dangle/{xyz_prefix}{strucindex}_relaxed_no-dangle.xyz'))
 pos = pos[:,:2]
-pos = remove_dangling_carbons(pos, rCC)
 
 lx = np.min(pos[:,0])
-Lx = np.max(pos[:,0])
-
 ly = np.min(pos[:,1])
+
+# Ensure no negative coords (necessary for periodic k-d tree to work)
+if lx < 0:
+    pos[:,0] -= lx
+if ly < 0:
+    pos[:,1] -= ly
+
+lx = np.min(pos[:,0])
+ly = np.min(pos[:,1])
+
+Lx = np.max(pos[:,0])
 Ly = np.max(pos[:,1])
+
 
 print(f'Coord bounds along x-direction: {[lx,Lx]}',flush=True)
 print(f'Coord bounds along y-direction: {[ly,Ly]}',flush=True)
 
-tree = cKDTree(pos)
+tree = KDTree(pos,boxsize=[Lx+eps,Ly+eps])
 
 nradii = 500
 #rmax = np.min(tree.maxes)/5.0
@@ -72,6 +76,6 @@ for k,r in enumerate(radii):
     rdata[nsamples*k:nsamples*(k+1)] = rdat
 
 
-np.save('dfs-%d.npy'%(rank),dfs) #distinguish the output of each process by its number
-np.save('radii-%d.npy'%rank,radii)
-np.save(f'rdata-{rank}.npy', rdata)
+np.save('dfs-%d_pbc.npy'%(rank),dfs) #distinguish the output of each process by its number
+np.save('radii-%d_pbc.npy'%rank,radii)
+np.save(f'rdata-{rank}_pbc.npy', rdata)
