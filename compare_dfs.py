@@ -3,13 +3,14 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from qcnico.plt_utils import setup_tex
+from qcnico.plt_utils import setup_tex, MAC_ensemble_colours
 from density_fluctuations import fit_dfs
 
 
-datadir = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/'
-datafile_1 = datadir + 'avg_dfs_radii_random_bravais_a20_l18_n40.npy'
-datafile_2 = datadir + 'avg_dfs_radii_random_bravais_a50_l48_n400.npy'
+datadir = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/bigMAC/'
+datafile_1 = datadir + 'pCNN/old_but_good/dfs_radii_bigMAC_unsymm_RS.npy'
+datafile_2 = datadir + 'tdot6/avg_dfs_radii_tempdot6_relaxed_263structures.npy'
+datafile_3 = datadir + 'tdot5/avg_dfs_radii_tempdot5_relaxed.npy'
 
 # datafile_1 = datadir + 'ata_structures/avg_dfs_radii_tempdot6_relaxed_263structures.npy'
 # datafile_2 = datadir + 'avg_dfs_radii_pCNN_relaxed.npy'
@@ -18,6 +19,7 @@ datafile_2 = datadir + 'avg_dfs_radii_random_bravais_a50_l48_n400.npy'
 
 dat1 = np.load(datafile_1)
 dat2 = np.load(datafile_2)
+dat3 = np.load(datafile_3)
 
 r1 = dat1[:,0]
 dfs_1 = dat1[:,1]
@@ -25,10 +27,13 @@ dfs_1 = dat1[:,1]
 r2 = dat2[:,0]
 dfs_2 = dat2[:,1]
 
+r3 = dat3[:,0]
+dfs_3 = dat3[:,1]
+
 print(r1)
 print(r2)
 
-a_1, b_1, r21 = fit_dfs(r1, dfs_1,lbounds=[5,150])
+a_1, b_1, r21 = fit_dfs(r1, dfs_1,lbounds=[4,20])
 print('Fit 1 found. (%s)\n\
         Slope = %f\n\
         Intercept = %f\n\
@@ -36,15 +41,22 @@ print('Fit 1 found. (%s)\n\
         '%(datafile_1.split('/')[-1],a_1, b_1, r21))
 
 
-a_2, b_2, r22 = fit_dfs(r2, dfs_2,lbounds=[1,10])
+a_2, b_2, r22 = fit_dfs(r2, dfs_2,lbounds=[4,20])
 print('Fit 2 found. (%s)\n\
         Slope = %f\n\
         Intercept = %f\n\
         rval = %f\n\
         '%(datafile_2.split('/')[-1],a_2, b_2, r22))
 
+a_3, b_3, r23 = fit_dfs(r2, dfs_2,lbounds=[4,20])
+print('Fit 2 found. (%s)\n\
+        Slope = %f\n\
+        Intercept = %f\n\
+        rval = %f\n\
+        '%(datafile_2.split('/')[-1],a_3, b_3, r23))
 
 setup_tex()
+clrs = MAC_ensemble_colours()
 
 fig = plt.figure()
 
@@ -55,12 +67,15 @@ ax.set_xscale('log')
 ax.set_yscale('log')
 
 
-ax.plot(r1,dfs_1,'ro',ms=1,alpha=0.7,label="$a=20$, $l=18$, $n=40$")
-ax.plot(r2,dfs_2,'bo',ms=1,alpha=0.7,label="$a=50$, $l=48$, $n=400$")
-ax.plot(r1, np.exp(b_1)*np.power(r1,a_1),'r--',lw=1.0,label=f'$\ell^{{{a_1}}}$')
-ax.plot(r2, np.exp(b_2)*np.power(r2,a_2),'b--',lw=1.0,label=f'$\ell^{{{a_2}}}$')
+ax.plot(r1,dfs_1,'o',c=clrs[0],ms=1,alpha=0.7,label="sAMC-500")
+ax.plot(r2,dfs_2,'o',c=clrs[1],ms=1,alpha=0.7,label="sAMC-400")
+ax.plot(r3,dfs_3,'o',c=clrs[2],ms=1,alpha=0.7,label="sAMC-300")
+ax.plot(r1, np.exp(b_1)*np.power(r1,a_1),'--',c=clrs[0],lw=1.0,label=f'$\ell^{{{a_1}}}$')
+ax.plot(r2, np.exp(b_2)*np.power(r2,a_2),'--',lw=1.0,c=clrs[1],label=f'$\ell^{{{a_2}}}$')
+ax.plot(r3, np.exp(b_3)*np.power(r3,a_3),'--',lw=1.0,c=clrs[2],label=f'$\ell^{{{a_3}}}$')
 ax.set_xlabel('$\ell$')
 ax.set_ylabel('$\sigma_{\\rho}^2(\ell)$')
 
 plt.legend()
 plt.show()
+
