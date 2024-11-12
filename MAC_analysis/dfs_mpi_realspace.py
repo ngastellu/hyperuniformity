@@ -7,8 +7,7 @@ import numpy as np
 from scipy.spatial import KDTree
 from density_fluctuations import DensityFluctuationsRS
 from mpi4py import MPI
-from qcnico.coords_io import read_xsf, read_xyz
-from qcnico.remove_dangling_carbons import remove_dangling_carbons
+from qcnico.coords_io import read_xyz
 
 
 rank = MPI.COMM_WORLD.Get_rank()
@@ -70,12 +69,17 @@ else:
 
 dfs = np.zeros(radii.shape[0],dtype=float)
 rdata = np.zeros((radii.shape[0]*nsamples,3))
+all_rhos = np.zeros((radii.shape[0],nsamples))
+all_sample_masks = np.zeros(radii.shape[0]*nsamples,pos.shape[0],dtype='bool')
 for k,r in enumerate(radii):
-    dflucs, rdat = DensityFluctuationsRS(tree,r,[lx,Lx],[ly,Ly],nsamples,save_rdata=True)
+    dflucs, in_samp, rhos, rdat = DensityFluctuationsRS(tree,r,[lx,Lx],[ly,Ly],nsamples,return_rdata=True,return_insample=True,return_densities=True)
+    all_sample_masks[nsamples*k:nsamples*(k+1),:] = in_samp
     dfs[k] = dflucs
+    all_rhos[k,:] = rhos
     rdata[nsamples*k:nsamples*(k+1)] = rdat
-
 
 np.save('dfs-%d_pbc.npy'%(rank),dfs) #distinguish the output of each process by its number
 np.save('radii-%d_pbc.npy'%rank,radii)
 np.save(f'rdata-{rank}_pbc.npy', rdata)
+np.save(f'densities-{rank}.npy',all_rhos)
+np.save(f'sample_masks-{rank}.npy', all_sample_masks)
