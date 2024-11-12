@@ -72,7 +72,7 @@ def DensityFluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_siz
     else: return variance
 
 
-def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdata=False,seed=None):
+def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdata=False,seed=None, save_iatoms=False,save_densities=False):
     """Computes the fluctuations in density of a point process resolved in continuous 2D space (as opposed
     to a discrete grid). The point process is sampled using circular windows. 
     
@@ -95,6 +95,10 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdat
         If `True`, the function also returns the positions and radii of the sampling windows.
     seed: `None` (default) or `int`
         Seed for RNG that determines window positions
+    save_iatoms: `bool`
+        If `True`, also return boolean array `in_sample` of shape (sample_size,Natoms), where `in_sample[n,k] = True` if the nth sample contatins the kth atom.
+    save_densities: `bool`
+        If `True`, also return the densities from each observation window.
 
     Output
     ------
@@ -116,17 +120,46 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,save_rdat
 
     # use vectorised sampling
     centers = np.random.random((sample_size,2))*np.array([(Lx-2*l),(Ly-2*l)]) + l + np.array([lx,ly])
-    densities = np.array([len(ll) for ll in structure_tree.query_ball_point(centers, l)]) / area
-
-    variance = np.var(densities)
     
+    # Determines which optional arrays get returned by the function
+    # 0: iatoms
+    # 1: densities
+    # 2: rdata
+
+    out_save = np.zeros(3,dtype='bool') 
+
+
+    if save_iatoms:
+        out_save[0] = True
+        Natoms = structure_tree.n
+        in_sample = np.zeros(sample_size, Natoms,dtype='bool')
+        densities = np.zeros(sample_size)
+        samples = structure_tree.query_ball_point(centers,l)
+        for n,s in enumerate(samples):
+            in_sample[n,s] = True 
+            densities[n] = len(s) / area
+    else:
+        densities = np.array([len(ll) for ll in structure_tree.query_ball_point(centers, l)]) / area
+        iatoms = 0
+    
+    if save_densities:
+        out_save[1] = True
+ 
     if save_rdata:
+        out_save[2] = True
+
         radii = np.ones((sample_size,1))*l
         rdata = np.hstack((radii,centers))
-        return variance, rdata
+    else:
+        rdata = 0
+    
+    variance = np.var(densities)
+
+    if np.any(out_save): 
+        out = (variance,rdata,iatoms,densities)
+        return variance, tuple([out[k] for k in out_save.nonzero()[0]])
     else:
         return variance
-
 
 def fit_dfs(radii,dfs,lbounds=None):
     if lbounds is not None:
