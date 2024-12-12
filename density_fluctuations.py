@@ -132,7 +132,7 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
     if return_insample:
         out_save[0] = True
         Natoms = structure_tree.n
-        in_sample = np.zeros(sample_size, Natoms,dtype='bool')
+        in_sample = np.zeros((sample_size, Natoms),dtype='bool')
         densities = np.zeros(sample_size)
         samples = structure_tree.query_ball_point(centers,l)
         for n,s in enumerate(samples):
@@ -156,7 +156,7 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
     variance = np.var(densities)
 
     if np.any(out_save): 
-        out = (variance,rdata,in_sample,densities)
+        out = (in_sample,densities,rdata)
         return variance, tuple([out[k] for k in out_save.nonzero()[0]])
     else:
         return variance

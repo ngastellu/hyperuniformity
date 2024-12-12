@@ -7,13 +7,14 @@ import numpy as np
 from scipy.spatial import KDTree
 from density_fluctuations import DensityFluctuationsRS
 from mpi4py import MPI
-from qcnico.coords_io import read_xyz
+from qcnico.coords_io import read_xsf, read_xyz
+from qcnico.remove_dangling_carbons import remove_dangling_carbons
 
 
 rank = MPI.COMM_WORLD.Get_rank()
 nprocs = MPI.COMM_WORLD.Get_size()
 
-rCC = 1.8 # max C-C 'bond length' (i.e. nearest-neigbour distance)
+# rCC = 1.8 # max C-C 'bond length' (i.e. nearest-neigbour distance)
 eps = 1.0 # additional 'whitespace' between cell and its periodic image
 
 strucindex = int(sys.argv[1])
@@ -66,13 +67,12 @@ if rank < nprocs - 1:
 else:
     radii = np.linspace(1,rmax,nradii)[rank*M:]
 
-
 dfs = np.zeros(radii.shape[0],dtype=float)
 rdata = np.zeros((radii.shape[0]*nsamples,3))
 all_rhos = np.zeros((radii.shape[0],nsamples))
-all_sample_masks = np.zeros(radii.shape[0]*nsamples,pos.shape[0],dtype='bool')
+all_sample_masks = np.zeros((radii.shape[0]*nsamples,pos.shape[0]),dtype='bool')
 for k,r in enumerate(radii):
-    dflucs, in_samp, rhos, rdat = DensityFluctuationsRS(tree,r,[lx,Lx],[ly,Ly],nsamples,return_rdata=True,return_insample=True,return_densities=True)
+    dflucs, (in_samp, rhos, rdat) = DensityFluctuationsRS(tree,r,[lx,Lx],[ly,Ly],nsamples,return_rdata=True,return_insample=True,return_densities=True)
     all_sample_masks[nsamples*k:nsamples*(k+1),:] = in_samp
     dfs[k] = dflucs
     all_rhos[k,:] = rhos
