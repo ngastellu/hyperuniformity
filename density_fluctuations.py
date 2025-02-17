@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import linregress
 from scipy.spatial import cKDTree
 
-def DensityFluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size):
+def FluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size,fluctuations_type='density'):
     """Measures the density fluctuations of a 2-dimensional square and discrete grid, where the density is sampled
     using a circular window of radius l.
     
@@ -23,6 +23,8 @@ def DensityFluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size):
         Lengthscale used for the densities. For a n-dimensional model density = (nb. of particles)/(l**n).
     sample_size: `int`
         Number of data points used to estimate the density standard deviation.
+    fluctuations_type: `str`
+        Type of fluctuations to be computed. Two valid values: 'number' and 'density'.
 
     Output
     ------
@@ -32,18 +34,21 @@ def DensityFluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size):
 
 
     Ns = np.zeros(sample_size,dtype=np.float)
-    area = np.pi*l*l
 
 
     for k, N in enumerate(Ns):
-        #center = np.random.randint(L,size=2)
         center = np.random.random(2)*(L-2*l) + l
         index_list = grid_tree.query_ball_point(center,l)
         sampled_indices = grid_points[index_list]
         sampled_grid = grid[sampled_indices[:,0],sampled_indices[:,1]]
         Ns[k] = np.sum(sampled_grid)
 
-    variance = np.var(Ns/area)
+    if fluctuations_type == 'density':
+        area = np.pi*l*l
+        variance = np.var(Ns/area)
+    else:
+        variance = np.var(Ns)
+    
     return variance
 
 
@@ -174,3 +179,25 @@ def fit_dfs(radii,dfs,lbounds=None):
     b = lr_obj.intercept
     r2 = lr_obj.rvalue**2
     return a, b, r2
+
+def NumberFluctuationsSquareWindow(pos, l, xbounds, ybounds, sample_size):
+    """Computes the number fluctuations in 2D system described by positions `pos` (`shape = (N,2)`), when using a square sampling window of side `l`, and collecting n=`sample_sizes` samples. The `bounds` arguments describes the extremal x- and y-coords spanned by the system; `bounds = [xmin, xmax, ymin, ymax]`, and are computed and returned if set to `None` (this behaviour avoids computing the min/max coords along both axes every time this function is called)."""
+
+    xmin, xmax = xbounds
+    ymin, ymax = ybounds
+    
+    # use vectorised sampling
+    centers = np.random.random((sample_size,2))*np.array([(xmax-2*l),(ymax-2*l)]) + l + np.array([xmin,ymin])
+
+    nb_in_window = np.zeros(sample_size,dtype=int)
+
+    X = pos[:,0]
+    Y = pos[:,1]
+
+    for k, r0 in enumerate(centers):
+        x0, y0 = r0
+        mask = (np.abs(X-x0) <= l/2) * (np.abs(Y-y0) <= l/2)
+        nb_in_window[k] = mask.sum()
+    
+    return np.var(nb_in_window)
+    
