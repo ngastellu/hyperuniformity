@@ -7,8 +7,12 @@ import numpy as np
 from scipy.spatial import KDTree
 from density_fluctuations import NumberFluctuationsSquareWindow
 from mpi4py import MPI
-from qcnico.coords_io import read_xyz
 from qcnico.rotate_pos import rotate_pos
+from qcnico.lattice import cartesian_product
+
+def square_lattice(a, n):
+    points_1d = np.arange(n) * a
+    return cartesian_product(points_1d,points_1d)
 
 
 rank = MPI.COMM_WORLD.Get_rank()
@@ -21,13 +25,10 @@ strucindex = int(sys.argv[1])
 structype = os.getcwd().split('/')[-2]
 nsamples = int(sys.argv[2])
 
-if structype == '40x40':
-    xyz_prefix = 'bigMAC-'
-else:
-    xyz_prefix = structype + 'n'
-pos = read_xyz(os.path.expanduser(f'~/scratch/clean_bigMAC/{structype}/relaxed_structures_no_dangle/{xyz_prefix}{strucindex}_relaxed_no-dangle.xyz'))
-pos = pos[:,:2]
+a = 1.0 # lattice constant
+n = 400 # nb. of points in x and y direction
 
+pos = square_lattice(a,n)
 
 all_thetas_deg = np.arange(360)
 M = all_thetas_deg.shape[0] // nprocs
