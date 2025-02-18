@@ -68,6 +68,6 @@ for n,theta in enumerate(thetas_deg):
 
 
 # avg_nfs = np.mean(nfs,axis=0) # perform average over sampled orientations
-np.save('nfs-%d_pbc.npy'%(rank), nfs) #distinguish the output of each process by its number
-np.save('side_lengths-%d_pbc.npy'%rank,side_lengths)
-np.save('rotation_angles_degrees-%d.npy'%rank,thetas_deg)
+np.save('rotated_sq_window/nfs-%d_pbc.npy'%(rank), nfs) #distinguish the output of each process by its number
+np.save('rotated_sq_window/side_lengths-%d_pbc.npy'%rank,side_lengths)
+np.save('rotated_sq_window/rotation_angles_degrees-%d.npy'%rank,thetas_deg)

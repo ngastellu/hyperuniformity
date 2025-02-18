@@ -21,9 +21,7 @@ nprocs = MPI.COMM_WORLD.Get_size()
 # rCC = 1.8 # max C-C 'bond length' (i.e. nearest-neigbour distance)
 eps = 1.0 # additional 'whitespace' between cell and its periodic image
 
-strucindex = int(sys.argv[1])
-structype = os.getcwd().split('/')[-2]
-nsamples = int(sys.argv[2])
+nsamples = int(sys.argv[1])
 
 a = 1.0 # lattice constant
 n = 400 # nb. of points in x and y direction
@@ -69,6 +67,6 @@ for n,theta in enumerate(thetas_deg):
 
 
 # avg_nfs = np.mean(nfs,axis=0) # perform average over sampled orientations
-np.save('nfs-%d_pbc.npy'%(rank), nfs) #distinguish the output of each process by its number
-np.save('side_lengths-%d_pbc.npy'%rank,side_lengths)
-np.save('rotation_angles_degrees-%d.npy'%rank,thetas_deg)
+np.save('rotated_sq_window/nfs-%d_pbc.npy'%(rank), nfs) #distinguish the output of each process by its number
+np.save('rotated_sq_window/side_lengths-%d_pbc.npy'%rank,side_lengths)
+np.save('rotated_sq_window/rotation_angles_degrees-%d.npy'%rank,thetas_deg)
