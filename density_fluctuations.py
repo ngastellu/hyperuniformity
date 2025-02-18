@@ -77,8 +77,8 @@ def DensityFluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_siz
     else: return variance
 
 
-def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata=False,seed=None, return_insample=False,return_densities=False):
-    """Computes the fluctuations in density of a point process resolved in continuous 2D space (as opposed
+def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata=False,seed=None, return_insample=False,return_counts=False):
+    """Computes the fluctuations in number of a point process resolved in continuous 2D space (as opposed
     to a discrete grid). The point process is sampled using circular windows. 
     
     Parameters
@@ -100,15 +100,15 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
         If `True`, the function also returns the positions and radii of the sampling windows.
     seed: `None` (default) or `int`
         Seed for RNG that determines window positions
-    return_isample: `bool`
+    return_insample: `bool`
         If `True`, also return boolean array `in_sample` of shape (sample_size,Natoms), where `in_sample[n,k] = True` if the nth sample contatins the kth atom.
-    return_densities: `bool`
-        If `True`, also return the densities from each observation window.
+    return_counts: `bool`
+        If `True`, also return the number of points in each observation window.
 
     Output
     ------
     variance: `float`
-        Density fluctuations between the different sampled regions of the structure.
+        Number fluctuations between the different sampled regions of the structure.
     rdata: `np.ndarray`, shape = (`sample_size`,3)
         List of vectors [`l`,x,y] where (x,y) are the coordinates of the sampling widows of (radius `l`)
         used to calculate `variance.`
@@ -118,8 +118,6 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
     if seed is not None:
         np.random.seed(seed)
     
-    area = np.pi*l*l
-
     lx, Lx = xbounds
     ly, Ly = ybounds
 
@@ -128,8 +126,8 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
     
     # Determines which optional arrays get returned by the function
     # 0: in_sample
-    # 1: densities
-    # 2: rdata
+    # 1: rdata
+    # 2: counts
 
     out_save = np.zeros(3,dtype='bool') 
 
@@ -138,33 +136,49 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
         out_save[0] = True
         Natoms = structure_tree.n
         in_sample = np.zeros((sample_size, Natoms),dtype='bool')
-        densities = np.zeros(sample_size)
+        counts = np.zeros(sample_size)
         samples = structure_tree.query_ball_point(centers,l)
         for n,s in enumerate(samples):
             in_sample[n,s] = True 
-            densities[n] = len(s) / area
+            counts[n] = len(s)
     else:
-        densities = np.array([len(ll) for ll in structure_tree.query_ball_point(centers, l)]) / area
+        counts = np.array([len(ll) for ll in structure_tree.query_ball_point(centers, l)])
         in_sample = 0
     
-    if return_densities:
-        out_save[1] = True
- 
     if return_rdata:
-        out_save[2] = True
-
+        out_save[1] = True
         radii = np.ones((sample_size,1))*l
         rdata = np.hstack((radii,centers))
     else:
         rdata = 0
-    
-    variance = np.var(densities)
+
+    if return_counts:
+        out_save[2] = True
+  
+    variance = np.var(counts)
 
     if np.any(out_save): 
-        out = (in_sample,densities,rdata)
+        out = (in_sample,rdata, counts)
         return variance, tuple([out[k] for k in out_save.nonzero()[0]])
     else:
         return variance
+    
+def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata=False,seed=None, return_insample=False,return_densities=False):
+    area = np.pi*l*l
+    if any((return_insample,return_rdata,return_densities)): # handle extra outputs; this is very janky and should probably be re-written
+        nb_var, *other_outputs = NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata,seed,return_insample,return_counts=return_densities)
+        if return_densities: # `counts` will always be the last element of `other_outputs`
+            counts = other_outputs[-1]
+            densities = counts / area
+            other_outputs[-1] = densities
+        density_var = nb_var / area
+        return density_var, tuple(other_outputs) # convert `other_outputs` to a tuple to match the output of `NumberFluctuationsRS`
+    
+    else:
+        nb_var = NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata,seed,return_insample,return_counts=return_densities)
+        density_var = nb_var / area
+        return density_var
+
 
 def fit_dfs(radii,dfs,lbounds=None):
     if lbounds is not None:
