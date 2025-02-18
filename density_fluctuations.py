@@ -5,6 +5,9 @@ from scipy.spatial import cKDTree
 def FluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size,fluctuations_type='density'):
     """Measures the density fluctuations of a 2-dimensional square and discrete grid, where the density is sampled
     using a circular window of radius l.
+
+    Note: we pass way more arguments to this function than necessary for performance reasons. Indeed, knowing `grid`, we could 
+    easily construct `grid_points` and `grid_tree`. However doing this for each sampl radius `l` is redundant.
     
     Parameters
     ----------
@@ -52,29 +55,51 @@ def FluctuationsGrid(grid,grid_points,grid_tree,L,l,sample_size,fluctuations_typ
     return variance
 
 
-def DensityFluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_size,save_rdata=False):
+def get_grid_indices(grid):
+    """Produces the array of indices for a 2D grid. Concretely, for `grid` of shape `(N,M)`, this function produces:
+    `[[0,0],
+       [0,1],
+        ...,
+        [N-1,M-1]]`. 
+    This function works for arrays with more than two axes as well. In those case the last dimension always gets incremented first (C-style)."""
+    
+    grid_shape = grid.shape
+    d = len(grid.shape) # nb of dimensions
+    return np.indices(grid_shape).reshape(d,-1).T # NOT the same `.reshape(-1,d)`!
+
+
+def FluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_size,save_rdata=False,fluctuations_type='density'):
     """Vectorised version of the DensityFluctuationsGrid function defined above.
     STILL IN PROGRESS; only partial vectorisation has been achieved; performance boost remain
     to be measured."""
 
-    Ns = np.zeros(sample_size,dtype=np.float)
+    valid_fluctypes = ['density', 'number'] 
+    assert fluctuations_type in valid_fluctypes, f'Invalid value for `fluctuations_type` kwarg: {fluctuations_type}. Must be one of the following: {valid_fluctypes}.'
+
+    Ns = np.zeros(sample_size,dtype=np.int64)
     area = np.pi*l*l
 
-    r_data = np.zeros((sample_size,3))
-    r_data[:,0] = r
 
     centers = np.random.rand(sample_size,2) * (L-2*l) + l
     inds_lists = grid_tree.query_ball_point(centers,l)
 
-    r_data[:,1:] = centers
-
     neighbs_inds = [grid_points[l] for l in inds_lists]
-    Ns = np.array([np.sum(M[n[:,0], n[:,1]]) for n in neighbs_inds])
+    Ns = np.array([np.sum(grid[n[:,0], n[:,1]]) for n in neighbs_inds])
 
-    variance = np.var(Ns/area)
+    if fluctuations_type == 'density':
+        area = np.pi * l * l
+        variance = np.var(Ns/area)
+    else:
+        variance = np.var(Ns)
 
-    if save_rdata: return variance, r_data
-    else: return variance
+    if save_rdata:
+        r_data = np.zeros((sample_size,3))
+        r_data[:,0] = l
+        r_data[:,1:] = centers
+        return variance, r_data
+    
+    else: 
+        return variance
 
 
 def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata=False,seed=None, return_insample=False,return_counts=False):
