@@ -205,19 +205,21 @@ def DensityFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rd
         return density_var
 
 
-def fit_dfs(radii,dfs,lbounds=None):
+def fit_fluctuations(radii,fluctuations,lbounds=None):
     if lbounds is not None:
         lmin = lbounds[0]
         lmax = lbounds[1]
         inds = ((radii >= lmin)*(radii <= lmax)).nonzero()[0]
         radii = radii[inds]
-        dfs = dfs[inds]
+        fluctuations = fluctuations[inds]
 
-    lr_obj = linregress(np.log(radii),np.log(dfs))
+    lr_obj = linregress(np.log(radii),np.log(fluctuations))
     a = lr_obj.slope
     b = lr_obj.intercept
     r2 = lr_obj.rvalue**2
     return a, b, r2
+
+fit_dfs = fit_fluctuations # for backwards-compatibility
 
 def NumberFluctuationsSquareWindow(pos, l, xbounds, ybounds, sample_size):
     """Computes the number fluctuations in 2D system described by positions `pos` (`shape = (N,2)`), when using a square sampling window of side `l`, and collecting n=`sample_sizes` samples. The `bounds` arguments describes the extremal x- and y-coords spanned by the system; `bounds = [xmin, xmax, ymin, ymax]`, and are computed and returned if set to `None` (this behaviour avoids computing the min/max coords along both axes every time this function is called)."""
