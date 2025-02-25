@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from qcnico.plt_utils import setup_tex
 from density_fluctuations import fit_fluctuations
 
-T = 2.3
-L = 100
+T = 3.1
+L = 50
 datafile = f'/Users/nico/Desktop/simulation_outputs/hyperuniformity/ising/MCMC-generated/nfs_radii_T_{T}_L_{L}.npy'
 
 print(f'Reading from file: ', datafile.split('/')[-1])

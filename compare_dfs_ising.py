@@ -7,7 +7,7 @@ from qcnico.plt_utils import setup_tex , get_cm
 from density_fluctuations import fit_fluctuations
 
 
-datadir = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/ising/MAP_generated/last_100x100_subsample/'
+datadir = '/Users/nico/Desktop/simulation_outputs/hyperuniformity/ising/MAP-generated/last_100x100_subsample/'
 temps_str = ['6', '65', '7', '8', '9']
 temps = [float(f'0.{T}') for T in temps_str]
 
