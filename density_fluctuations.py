@@ -102,7 +102,7 @@ def FluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_size,save_
         return variance
 
 
-def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rdata=False,seed=None, return_insample=False,return_counts=False):
+def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,restrict_centres=True,return_rdata=False,seed=None, return_insample=False,return_counts=False):
     """Computes the fluctuations in number of a point process resolved in continuous 2D space (as opposed
     to a discrete grid). The point process is sampled using circular windows. 
     
@@ -121,6 +121,12 @@ def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rda
         is its maximum y coordinate.
     sample_size: `int`
         Number of sampling windows used to estimate the density fluctuations.
+    restrict_centres: `bool`
+        If set `True` the all of the sampling windows centres are placed deep enough into the interior of the system being analysed so as to
+        avoid sampling past the edges of the system. If this restriction is lifted (i.e. set this arg to `False`), the centers of the sampling
+        windows can be placed anywhere in the system. 
+        ** N.B.: Only set `restrict_centres` to `False` if applying PBC to the system (i.e. specifying a value of the `boxsize` kwarg to the `KDTree`
+        constructor), otherwise you'll be sampling a lot of empty space, which will mess up your results.
     return_rdata: `bool`
         If `True`, the function also returns the positions and radii of the sampling windows.
     seed: `None` (default) or `int`
@@ -147,7 +153,11 @@ def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,return_rda
     ly, Ly = ybounds
 
     # use vectorised sampling
-    centers = np.random.random((sample_size,2))*np.array([(Lx-2*l),(Ly-2*l)]) + l + np.array([lx,ly])
+    if restrict_centres:
+        # place centers in the interior of the grid so as to avoid sampling past the edge of the structure
+        centers = np.random.random((sample_size,2))*np.array([(Lx-2*l),(Ly-2*l)]) + l + np.array([lx,ly])
+    else:
+        centers = np.random.random((sample_size,2))*np.array([(Lx-lx),(Ly-ly)]) + np.array([lx,ly]) # centres can be anywhere in the grid
     
     # Determines which optional arrays get returned by the function
     # 0: in_sample
@@ -221,14 +231,21 @@ def fit_fluctuations(radii,fluctuations,lbounds=None):
 
 fit_dfs = fit_fluctuations # for backwards-compatibility
 
-def NumberFluctuationsSquareWindow(pos, l, xbounds, ybounds, sample_size):
-    """Computes the number fluctuations in 2D system described by positions `pos` (`shape = (N,2)`), when using a square sampling window of side `l`, and collecting n=`sample_sizes` samples. The `bounds` arguments describes the extremal x- and y-coords spanned by the system; `bounds = [xmin, xmax, ymin, ymax]`, and are computed and returned if set to `None` (this behaviour avoids computing the min/max coords along both axes every time this function is called)."""
+def NumberFluctuationsSquareWindow(pos, l, xbounds, ybounds, sample_size,restrict_centres=True):
+    """Computes the number fluctuations in 2D system described by positions `pos` (`shape = (N,2)`), when using a square sampling window of side `l`, and collecting n=`sample_sizes` samples. The `bounds` arguments describes the extremal x- and y-coords spanned by the system; `bounds = [xmin, xmax, ymin, ymax]`, and are computed and returned if set to `None` (this behaviour avoids computing the min/max coords along both axes every time this function is called).
+    
+    If `restrict_centres` is True, then the sampling windows are positioned in such a way as to avoid overlapping with the edges of the system being sampled."""
 
     xmin, xmax = xbounds
     ymin, ymax = ybounds
     
     # use vectorised sampling
-    centers = np.random.random((sample_size,2))*np.array([(xmax-2*l),(ymax-2*l)]) + l + np.array([xmin,ymin])
+    if restrict_centres:
+        # place centers in the interior of the grid so as to avoid sampling past the edge of the structure
+        centers = np.random.random((sample_size,2))*np.array([(xmax-2*l),(ymax-2*l)]) + l + np.array([xmin,ymin])
+    else:
+        centers = np.random.random((sample_size,2))*np.array([(xmax-xmin),(ymax-ymin)]) + np.array([xmin,ymin]) # centres can be anywhere in the grid
+
 
     nb_in_window = np.zeros(sample_size,dtype=int)
 
