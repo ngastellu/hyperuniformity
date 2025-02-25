@@ -17,14 +17,13 @@ def orientation_avg_single_sample(isample):
 def get_rot45_nfs(isample, i45=45): # focus on 45 degree rotation beacause it gives marked hyperfluctuations in my square lattice test.
     try:
         nfs = np.load(f'job-{isample}/nfs-0_pbc.npy')
+        if i45 is None:
+            angles = np.load(f'job-{isample}/rotation_angles_degrees-0.npy')
+            i45 = (angles == 45).nonzero()[0][0]
+        return nfs[i45,:]
     except Exception as e:
         print(e)
         return None
-
-    if i45 is None:
-        angles = np.load(f'job-{isample}/rotation_angles_degrees-0.npy')
-        i45 = (angles == 45).nonzero()[0][0]
-    return nfs[i45,:]
 
 ijobs = [d.split('-')[1] for d in glob('job-*')]
 
