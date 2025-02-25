@@ -12,7 +12,7 @@ from mpi4py import MPI
 npy_name = sys.argv[1]
 temp = float(npy_name.split('_')[2])
 
-all_ising_samples = np.load(os.path.expanduser(f'~/scratch/hyperuniformity/ising/MCMC-generated/samples/{npy_name}')).astype('bool')
+all_ising_samples = np.load(os.path.expanduser(f'~/scratch/hyperuniformity/ising/MCMC-generated/samples/{npy_name}'))
 
 
 rank = MPI.COMM_WORLD.Get_rank()
@@ -55,9 +55,11 @@ nsamples = ising_samples.shape[0] # usually equal to M, except if rank = nprocs-
 nfs = np.zeros((nsamples,nradii))
 
 for n, grid in enumerate(ising_samples):
+    print(n, grid.shape, grid.sum())
     igrid = rank*M + n
-    if np.all(grid == 0) or np.all(grid==1):
+    if np.all(grid == 0) or np.all(grid==1) or np.all(grid==-1):
         print(f'--- Skipping grid {igrid} (completely uniform) ---')
+        continue
     start = perf_counter()
     for k, r in enumerate(radii):
         nfs[n,k] = FluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,r,nwindows,fluctuations_type='number')

@@ -56,7 +56,7 @@ print(f'Coord bounds along y-direction: {[ly,Ly]}',flush=True)
 
 
 for k,l in enumerate(radii):
-    nflucs = NumberFluctuationsRS(tree,l,[lx,Lx],[ly,Ly],nsamples)
+    nflucs = NumberFluctuationsRS(tree,l,[lx,Lx],[ly,Ly],nsamples,restrict_centres=False)
     nfs[n,k] = nflucs
 
 # avg_nfs = np.mean(nfs,axis=0) # perform average over sampled orientations

@@ -62,7 +62,7 @@ for n,theta in enumerate(thetas_deg):
 
 
     for k,l in enumerate(side_lengths):
-        nflucs = NumberFluctuationsSquareWindow(pos,l,[lx,Lx],[ly,Ly],nsamples)
+        nflucs = NumberFluctuationsSquareWindow(pos,l,[lx,Lx],[ly,Ly],nsamples,restrict_centres=False)
         nfs[n,k] = nflucs
 
 
