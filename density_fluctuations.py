@@ -68,7 +68,7 @@ def get_grid_indices(grid):
     return np.indices(grid_shape).reshape(d,-1).T # NOT the same `.reshape(-1,d)`!
 
 
-def FluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_size,save_rdata=False,fluctuations_type='density'):
+def FluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_size,save_rdata=False,fluctuations_type='density',restrict_centres=True):
     """Vectorised version of the DensityFluctuationsGrid function defined above.
     STILL IN PROGRESS; only partial vectorisation has been achieved; performance boost remain
     to be measured."""
@@ -80,7 +80,10 @@ def FluctuationsGrid_vectorised(grid,grid_points,grid_tree,L,l,sample_size,save_
     area = np.pi*l*l
 
 
-    centers = np.random.rand(sample_size,2) * (L-2*l) + l
+    if restrict_centres:
+        centers = np.random.rand(sample_size,2) * (L-2*l) + l
+    else:
+        centers = np.random.rand(sample_size,2) * (L-l) + l
     inds_lists = grid_tree.query_ball_point(centers,l)
 
     neighbs_inds = [grid_points[l] for l in inds_lists]
@@ -171,7 +174,7 @@ def NumberFluctuationsRS(structure_tree,l,xbounds,ybounds,sample_size,restrict_c
         out_save[0] = True
         Natoms = structure_tree.n
         in_sample = np.zeros((sample_size, Natoms),dtype='bool')
-        counts = np.zeros(sample_size)
+        counts = np.zeros(sample_size,dtype=np.int32)
         samples = structure_tree.query_ball_point(centers,l)
         for n,s in enumerate(samples):
             in_sample[n,s] = True 
