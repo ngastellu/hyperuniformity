@@ -8,7 +8,7 @@ from density_fluctuations import fit_fluctuations
 
 T = 2.3
 L = 100
-datafile = f'/Users/nico/Desktop/simulation_outputs/hyperuniformity/avg_nfs_radii_poisson_grid_pbc.npy'
+datafile = f'/Users/nico/Desktop/simulation_outputs/hyperuniformity/avg_nfs_radii_random_grid_realspace.npy'
 
 print(f'Reading from file: ', datafile.split('/')[-1])
 
